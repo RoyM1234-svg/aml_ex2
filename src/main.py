@@ -113,9 +113,9 @@ def train_normalizing_flow():
 if __name__ == "__main__":
 
     # Train model
-    model = train_normalizing_flow()
+    # model = train_normalizing_flow()
 
-    torch.save(model.state_dict(), "normalized_flow_model.pth")
+    # torch.save(model.state_dict(), "normalized_flow_model.pth")
 
     # Load model
     input_dim = 2
@@ -124,4 +124,4 @@ if __name__ == "__main__":
     model.load_state_dict(torch.load("normalized_flow_model.pth"))
     
 
-    sample_from_model(model, num_samples=10000)
+    sample_from_model(model, num_samples=1000)

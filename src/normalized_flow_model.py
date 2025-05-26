@@ -47,13 +47,9 @@ class PermutationLayer(ReversibleLayer):
     def __init__(self, input_dim: int):
         super().__init__()
         self.input_dim = input_dim
-        
-        # Create permutation tensor first
-        permutation = torch.randperm(input_dim)
-        
-        # Register both buffers
-        self.register_buffer("permutation", permutation)
-        self.register_buffer("inverse_permutation", torch.argsort(permutation))
+
+        self.register_buffer("permutation", torch.randperm(input_dim))
+        self.register_buffer("inverse_permutation", torch.argsort(self.permutation))
 
     def forward(self, z: torch.Tensor) -> torch.Tensor:
         return z[:, self.permutation] # type: ignore
