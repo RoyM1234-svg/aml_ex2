@@ -16,18 +16,20 @@ class ReversibleLayer(nn.Module, ABC):
 class NormalizedFlowModel(ReversibleLayer):
     def __init__(self, input_dim: int, n_layers: int = 15):
         super().__init__()
+        self.base_dist = torch.distributions.MultivariateNormal(
+            torch.zeros(input_dim), 
+            torch.eye(input_dim)
+        )
         layers: list[ReversibleLayer] = []
         layers.append(AffineCouplingLayer(input_dim))
         for _ in range(n_layers - 1):
             layers.extend([PermutationLayer(input_dim), AffineCouplingLayer(input_dim)])
         self.layers: nn.ModuleList = nn.ModuleList(layers) 
-        
 
     def forward(self, z: torch.Tensor) -> torch.Tensor:
         for layer in self.layers:
             z = layer(z)
         return z
-
 
     def inverse(self, y: torch.Tensor) -> torch.Tensor:
         for layer in reversed(self.layers):
@@ -42,6 +44,8 @@ class NormalizedFlowModel(ReversibleLayer):
             y = layer.inverse(y) # type: ignore
         return log_det
 
+    def log_prob(self, y: torch.Tensor) -> torch.Tensor:
+        return self.base_dist.log_prob(self.inverse(y)) + self.log_inverse_jacobian_determinant(y)
 
 class PermutationLayer(ReversibleLayer):
     def __init__(self, input_dim: int):
@@ -49,7 +53,7 @@ class PermutationLayer(ReversibleLayer):
         self.input_dim = input_dim
 
         self.register_buffer("permutation", torch.randperm(input_dim))
-        self.register_buffer("inverse_permutation", torch.argsort(self.permutation))
+        self.register_buffer("inverse_permutation", torch.argsort(self.permutation)) # type: ignore
 
     def forward(self, z: torch.Tensor) -> torch.Tensor:
         return z[:, self.permutation] # type: ignore
