@@ -1,8 +1,11 @@
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import numpy as np
+import torch
 
-def plot_trajectories(trajectories):
+def plot_trajectories(trajectories: list[list[torch.Tensor]],
+                      title: str,
+                      save_path: str | None = None):
     plt.figure(figsize=(10, 10))
     
     n_steps = len(trajectories[0])
@@ -10,17 +13,17 @@ def plot_trajectories(trajectories):
     colors = cm.viridis(np.linspace(0, 1, n_steps))
     
     for i, trajectory in enumerate(trajectories):
-        trajectory = np.array(trajectory)  
+        trajectory_np = np.array([t.detach().cpu().numpy() for t in trajectory])
         
-        for j in range(len(trajectory) - 1):
-            plt.plot(trajectory[j:j+2, 0], trajectory[j:j+2, 1], 
+        for j in range(len(trajectory_np) - 1):
+            plt.plot(trajectory_np[j:j+2, 0], trajectory_np[j:j+2, 1], 
                     color=colors[j], linewidth=2, alpha=0.8)
         
-        plt.scatter(trajectory[0, 0], trajectory[0, 1], 
+        plt.scatter(trajectory_np[0, 0], trajectory_np[0, 1], 
                    color='red', s=100, marker='o', edgecolor='black',
                    label='Start' if i == 0 else "", zorder=5)
         
-        plt.scatter(trajectory[-1, 0], trajectory[-1, 1], 
+        plt.scatter(trajectory_np[-1, 0], trajectory_np[-1, 1], 
                    color='blue', s=100, marker='s', edgecolor='black',
                    label='End' if i == 0 else "", zorder=5)
     
@@ -30,7 +33,7 @@ def plot_trajectories(trajectories):
     cbar = plt.colorbar(sm, ax=plt.gca(), fraction=0.046, pad=0.04)
     cbar.set_label('Step Number', rotation=270, labelpad=20)
     
-    plt.title(f'Trajectories of {len(trajectories)} Points Through Normalizing Flow', fontsize=14)
+    plt.title(title, fontsize=14)
     plt.xlabel('X')
     plt.ylabel('Y')
     plt.grid(True, alpha=0.3)
@@ -42,8 +45,10 @@ def plot_trajectories(trajectories):
         plt.legend(loc='upper right')
     
     plt.tight_layout()
-    plt.show()
-
+    if save_path:
+        plt.savefig(save_path)
+    else:
+        plt.show()
 
 def plot_test_metrics(test_epoch_losses, test_epoch_log_probs, test_epoch_log_dets, epochs):
     plt.figure(figsize=(10, 6))
@@ -60,6 +65,43 @@ def plot_test_metrics(test_epoch_losses, test_epoch_log_probs, test_epoch_log_de
     plt.legend()
     
     plt.show()
+
+def plot_samples(samples, title="Generated Samples", figsize=(10, 8), save_path=None):
+    if torch.is_tensor(samples):
+        points = samples.detach().cpu().numpy()
+    else:
+        points = samples
+    
+    plt.figure(figsize=figsize)
+    plt.scatter(points[:, 0], points[:, 1], alpha=0.6, s=1)
+    plt.title(title)
+    plt.xlabel('X')
+    plt.ylabel('Y')
+    plt.grid(True, alpha=0.3)
+    plt.axis('equal')
+    if save_path:
+        plt.savefig(save_path)
+    else:
+        plt.show()
+
+def sample_points_inside_outside_rings():
+    inside_points = [
+        [0.1, 0.05], 
+        [1.95, -0.1],
+        [3.1, -0.95],
+    ]
+    
+    outside_points = [
+        [3, 1],
+        [5.5, 0],
+    ]
+    
+    all_points = np.array(inside_points + outside_points)
+    mean = np.array([2, -0.5])
+    std = np.array([1.5, 0.7])
+    normalized = (all_points - mean) / std
+    
+    return torch.tensor(normalized[:3], dtype=torch.float32), torch.tensor(normalized[3:], dtype=torch.float32)
 
 # def visualize_points_with_rings(model, inside_points, outside_points):
 #     """Visualize selected points together with the Olympic rings."""

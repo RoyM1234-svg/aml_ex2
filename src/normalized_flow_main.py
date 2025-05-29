@@ -8,7 +8,7 @@ from normalized_flow_model import NormalizedFlowModel, AffineCouplingLayer, Perm
 from normalized_flow_loss import NormalizedFlowLoss
 from create_data import create_unconditional_olympic_rings 
 from sklearn.model_selection import train_test_split
-from visualizations_utils import plot_test_metrics, plot_trajectories
+from utils import plot_test_metrics, plot_trajectories, sample_points_inside_outside_rings
 
 def sample_from_model(model, num_samples=10000):
     model.eval()
@@ -135,68 +135,43 @@ def sample_through_layers(model, num_samples, save_dir="visualizations_through_l
 def sample_trajectories(model, num_samples):
     z = torch.randn(num_samples, 2)
     trajectories = create_trajectories_for_points(model, z)
-    plot_trajectories(trajectories)
+    plot_trajectories(trajectories, title="Trajectories of Points Through Normalizing Flow")
 
-def create_trajectories_for_points(model, points):
+def create_trajectories_for_points(model: NormalizedFlowModel,
+                                   points: torch.Tensor) -> list[list[torch.Tensor]]:
     model.eval()
     current = points.clone()
     trajectories = [[] for _ in range(len(points))]
     with torch.no_grad():
         for i in range(len(points)):
-            trajectories[i].append(current[i].numpy())
+            trajectories[i].append(current[i])
 
         for layer in model.layers:
             current = layer(current)
             for i in range(len(points)):
-                trajectories[i].append(current[i].numpy())
+                trajectories[i].append(current[i])
 
     return trajectories
 
-def create_reverse_trajectories_for_points(model, points):
+def create_reverse_trajectories_for_points(model, points) -> list[list[torch.Tensor]]:
     model.eval()
     current = points.clone()
     trajectories = [[] for _ in range(len(points))]
     with torch.no_grad():
         for i in range(len(points)):
-            trajectories[i].append(current[i].numpy())
+            trajectories[i].append(current[i])
 
         for layer in reversed(model.layers):
             current = layer.inverse(current)
             for i in range(len(points)):
-                trajectories[i].append(current[i].numpy())
+                trajectories[i].append(current[i])
 
     return trajectories
-
-def sample_points_inside_outside_rings():
-    centers = [(0, 0), (2, 0), (4, 0), (1, -1), (3, -1)]
-    
-    inside_points = []
-    for i in range(3):
-        center = centers[i % 5]
-        angle = np.random.uniform(0, 2*np.pi)
-        r = np.random.uniform(0, 0.3)
-        x = center[0] + r * np.cos(angle)
-        y = center[1] + r * np.sin(angle)
-        inside_points.append([x, y])
-    
-    outside_points = [
-        [3, 1],
-        [5.5, 0],
-    ]
-    
-    all_points = np.array(inside_points + outside_points)
-    mean = np.array([2, -0.5])
-    std = np.array([1.5, 0.7])
-    normalized = (all_points - mean) / std
-    
-    return torch.tensor(normalized[:3], dtype=torch.float32), torch.tensor(normalized[3:], dtype=torch.float32)
-
-
 
 
 if __name__ == "__main__":
 
-    # Train model
+    # # Train model
     # model = train_normalizing_flow()
 
     # torch.save(model.state_dict(), "normalized_flow_model.pth")
@@ -206,16 +181,17 @@ if __name__ == "__main__":
     
     model = NormalizedFlowModel(input_dim)
     model.load_state_dict(torch.load("normalized_flow_model.pth"))
-    
 
-    sample_from_model(model, num_samples=1000)
+    # All questions 
+    # sample_from_model(model, num_samples=1000)
+
+    # sample_trajectories(model, 10)
 
     inside_points, outside_points = sample_points_inside_outside_rings()
     all_points = torch.cat([inside_points, outside_points])
 
     trajectories = create_reverse_trajectories_for_points(model, all_points)
-    plot_trajectories(trajectories)
-    
+    plot_trajectories(trajectories, title="Reverse Trajectories of Points Through Normalizing Flow")
 
     print("inside points log prob", model.log_prob(inside_points))
     print("outside points log prob", model.log_prob(outside_points))

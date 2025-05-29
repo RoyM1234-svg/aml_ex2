@@ -175,4 +175,10 @@ cython_debug/
 
 .DS_Store
 normalized_flow_model.pth
+unconditional_flow_matching_model.pth
 *.png
+
+part1_plots/
+part2_plots/
+test.py
+
