@@ -47,7 +47,6 @@ def train_normalizing_flow():
     input_dim = 2
     n_layers = 15
     
-    print("Generating Olympic rings training data...")
     data_np = create_unconditional_olympic_rings(num_data_points)
     train, test = train_test_split(data_np, test_size=0.2, random_state=42)
 

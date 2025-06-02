@@ -55,7 +55,6 @@ def sample_from_each_class(model: ConditionalFlowMatchingModel, num_classes: int
     labels = torch.arange(num_classes)
     samples = torch.randn(num_classes, 2)
 
-    # Store trajectories - list of tensors, each tensor is (num_classes, 2)
     trajectories = [samples.clone()]
     
     for t in torch.arange(0, 1+delta_t, delta_t):
@@ -93,7 +92,6 @@ def plot_conditional_samples(samples, labels, num_classes, title):
     plt.show()
 
 def plot_class_trajectories(trajectories, labels, num_classes, title="Flow Trajectories"):
-    """Plot the trajectories showing how samples evolve from noise to final samples"""
     if torch.is_tensor(labels):
         labels = labels.detach().cpu().numpy()
     
@@ -102,24 +100,19 @@ def plot_class_trajectories(trajectories, labels, num_classes, title="Flow Traje
     plt.figure(figsize=(12, 10))
     
     for class_idx in range(num_classes):
-        # Extract trajectory for this class
         class_trajectory = torch.stack([traj[class_idx] for traj in trajectories])
         class_trajectory = class_trajectory.detach().cpu().numpy()
         
-        # Plot the trajectory as a line
         plt.plot(class_trajectory[:, 0], class_trajectory[:, 1], 
                 c=colors[class_idx], alpha=0.7, linewidth=2,
                 label=f'{colors[class_idx].capitalize()} Ring Trajectory')
         
-        # Mark the starting point (noise) with square marker
         plt.scatter(class_trajectory[0, 0], class_trajectory[0, 1], 
                    c=colors[class_idx], s=100, marker='s', alpha=0.8, edgecolors='white')
         
-        # Mark the ending point (final sample) with circle marker
         plt.scatter(class_trajectory[-1, 0], class_trajectory[-1, 1], 
                    c=colors[class_idx], s=100, marker='o', alpha=1.0, edgecolors='white')
     
-    # Add legend entries for markers
     plt.scatter([], [], c='gray', s=100, marker='s', alpha=0.8, edgecolors='white', label='Start')
     plt.scatter([], [], c='gray', s=100, marker='o', alpha=1.0, edgecolors='white', label='End')
     
@@ -133,24 +126,23 @@ def plot_class_trajectories(trajectories, labels, num_classes, title="Flow Traje
     plt.show()
 
 def main():
-    # model = train_conditional_flow_model()
-    # torch.save(model.state_dict(), "conditional_flow_matching_model.pth")
+    # Train model
+    model = train_conditional_flow_model()
+    torch.save(model.state_dict(), "conditional_flow_matching_model.pth")
 
     # load model
     delta_t = 1/1000
     model = ConditionalFlowMatchingModel(input_dim=2, hidden_dim=64)
     model.load_state_dict(torch.load("conditional_flow_matching_model.pth"))
 
-    # Sample many samples from all classes
-    # samples, labels = sample_from_conditional_flow_model(model, num_samples=3000, num_classes=5, delta_t=delta_t)
-    # plot_conditional_samples(samples, labels, num_classes=5, title="Conditional Flow Matching Samples")
+    # All Questions
+    samples, labels = sample_from_conditional_flow_model(model, num_samples=3000, num_classes=5, delta_t=delta_t)
+    plot_conditional_samples(samples, labels, num_classes=5, title="Conditional Flow Matching Samples")
 
-    # Sample one from each class and visualize trajectories
-    class_samples, class_labels, trajectories = sample_from_each_class(model, num_classes=5, delta_t=delta_t)
+    _, class_labels, trajectories = sample_from_each_class(model, num_classes=5, delta_t=delta_t)
     plot_class_trajectories(trajectories, class_labels, num_classes=5, title="Classes Trajectories")
     
-    # Also plot the final samples from each class
-    plot_conditional_samples(class_samples, class_labels, num_classes=5, title="One Sample from Each Class")
+    
 
 if __name__ == "__main__":
     main()

@@ -12,7 +12,6 @@ import os
 
 
 def plot_training_losses(batch_losses, save_path="training_losses.png"):
-    """Plot the training losses across batches."""
     plt.figure(figsize=(10, 6))
     plt.plot(batch_losses)
     plt.title('Training Loss vs Batch')
@@ -22,7 +21,6 @@ def plot_training_losses(batch_losses, save_path="training_losses.png"):
     plt.tight_layout()
     plt.savefig(save_path, dpi=300, bbox_inches='tight')
     plt.show()
-    print(f"Training loss plot saved to {save_path}")
 
 def train_unconditional_flow_matching_model():   
     learning_rate = 1e-3
@@ -130,14 +128,11 @@ def compare_reversed_points(model, delta_t):
     print("recreated_points", recreated_points)
 
 
-
-    
-
 def main():
     # Train model
-    # model, batch_losses = train_unconditional_flow_matching_model()
-    # plot_training_losses(batch_losses)
-    # torch.save(model.state_dict(), "unconditional_flow_matching_model.pth")
+    model, batch_losses = train_unconditional_flow_matching_model()
+    plot_training_losses(batch_losses)
+    torch.save(model.state_dict(), "unconditional_flow_matching_model.pth")
 
     #load model
     model = UnconditionalFlowMatchingModel(input_dim=2, hidden_dim=64)
@@ -156,10 +151,7 @@ def main():
         sample_from__uncoditional_model(model, delta_t, times_to_plot=[1])
 
     compare_reversed_points(model, delta_t)
-    
 
-
-    
 
 if __name__ == "__main__":
     main()
