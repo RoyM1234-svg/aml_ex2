@@ -9,7 +9,6 @@ from unconditional_flow_matching_loss import UnconditionalFlowMatchingLoss
 from utils import plot_samples, plot_trajectories, sample_points_inside_outside_rings
 import matplotlib.pyplot as plt
 import os
-import numpy as np
 
 
 def plot_training_losses(batch_losses, save_path="training_losses.png"):
@@ -112,6 +111,27 @@ def create_reverse_trajectories_for_points(model, points, delta_t) -> list[list[
                 trajectories[i].append(point.clone())
     return trajectories
 
+def compare_reversed_points(model, delta_t):
+    inside_points, outside_points = sample_points_inside_outside_rings()
+    
+    original_points = torch.cat([inside_points, outside_points])
+    print("original_points", original_points)
+
+    trajectories = create_reverse_trajectories_for_points(model, original_points, delta_t=delta_t)
+
+    plot_trajectories(trajectories, title="Reverse Trajectories of Points Through Unconditional Flow Matching")
+
+    inverted_points = torch.stack([trajectory[-1] for trajectory in trajectories])
+
+    recreated_trajectoires = create_trajectories_for_points(model, inverted_points, delta_t=delta_t)
+
+    recreated_points = torch.stack([trajectory[-1] for trajectory in recreated_trajectoires])
+
+    print("recreated_points", recreated_points)
+
+
+
+    
 
 def main():
     # Train model
@@ -126,23 +146,16 @@ def main():
     # All questions 
 
     delta_t = 1/1000
-    # times_to_plot = [0, 0.2, 0.4, 0.6, 0.8, 1]
-    # sample_from__uncoditional_model(model, delta_t, times_to_plot=times_to_plot)
+    times_to_plot = [0, 0.2, 0.4, 0.6, 0.8, 1]
+    sample_from__uncoditional_model(model, delta_t, times_to_plot=times_to_plot)
 
-    # sample_trajectories(model, 10, delta_t)
+    sample_trajectories(model, 10, delta_t)
 
-    # delta_ts = [0.002, 0.02, 0.05, 0.1, 0.2]
-    # for delta_t in delta_ts:
-    #     sample_from__uncoditional_model(model, delta_t, times_to_plot=[1])
+    delta_ts = [0.002, 0.02, 0.05, 0.1, 0.2]
+    for delta_t in delta_ts:
+        sample_from__uncoditional_model(model, delta_t, times_to_plot=[1])
 
-    inside_points, outside_points = sample_points_inside_outside_rings()
-    all_points = torch.cat([inside_points, outside_points])
-
-    
-    trajectories = create_reverse_trajectories_for_points(model, all_points, delta_t=delta_t)
-    plot_trajectories(trajectories, title="Reverse Trajectories of Points Through Unconditional Flow Matching")
-
-
+    compare_reversed_points(model, delta_t)
     
 
 

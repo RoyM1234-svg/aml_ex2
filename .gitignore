@@ -180,5 +180,7 @@ unconditional_flow_matching_model.pth
 
 part1_plots/
 part2_plots/
-test.py
-
+*/test.py
+.idea/
+conditional_flow_matching_model.pth
+src/test.py

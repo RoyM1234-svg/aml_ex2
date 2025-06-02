@@ -172,9 +172,9 @@ def create_reverse_trajectories_for_points(model, points) -> list[list[torch.Ten
 if __name__ == "__main__":
 
     # # Train model
-    # model = train_normalizing_flow()
+    model = train_normalizing_flow()
 
-    # torch.save(model.state_dict(), "normalized_flow_model.pth")
+    torch.save(model.state_dict(), "normalized_flow_model.pth")
 
     # Load model
     input_dim = 2
@@ -183,9 +183,9 @@ if __name__ == "__main__":
     model.load_state_dict(torch.load("normalized_flow_model.pth"))
 
     # All questions 
-    # sample_from_model(model, num_samples=1000)
+    sample_from_model(model, num_samples=1000)
 
-    # sample_trajectories(model, 10)
+    sample_trajectories(model, 10)
 
     inside_points, outside_points = sample_points_inside_outside_rings()
     all_points = torch.cat([inside_points, outside_points])
